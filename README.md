@@ -23,7 +23,6 @@ Venk is an ambitious project that combines an elegant, readable syntax with nati
 
 ## 🎥 Showcase
 
-*(Замени эти картинки на свои, когда загрузишь их в папку `assets`)*
 
 ![3D Engine](assets/3d_screenshot.png)
 *Built-in 3D engine with particles, lighting, and FPS controls.*
