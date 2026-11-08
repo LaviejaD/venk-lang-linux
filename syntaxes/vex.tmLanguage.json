@@ -1,0 +1,48 @@
+{
+    "scopeName": "source.vex",
+    "patterns": [
+        { "include": "#comments" },
+        { "include": "#keywords" },
+        { "include": "#strings" },
+        { "include": "#numbers" },
+        { "include": "#functions" }
+    ],
+    "repository": {
+        "comments": {
+            "match": "//.*",
+            "name": "comment.line.double-slash.vex"
+        },
+        "keywords": {
+            "patterns": [
+                {
+                    "match": "\\b(let|mut|const|fn|return|if|elif|else|match|for|in|while|loop|break|continue|import|from|as|pub|use|struct|enum|impl|trait|type|async|await|try|catch|throw|and|or|not|is|sizeof|self|vip|vipc|true|false|null)\\b",
+                    "name": "keyword.control.vex"
+                },
+                {
+                    "match": "\\b(int|float|bool|char|string|any|Result|Option)\\b",
+                    "name": "storage.type.vex"
+                }
+            ]
+        },
+        "strings": {
+            "patterns": [
+                {
+                    "begin": "\"",
+                    "end": "\"",
+                    "name": "string.quoted.double.vex",
+                    "patterns": [
+                        { "match": "\\\\.", "name": "constant.character.escape.vex" }
+                    ]
+                }
+            ]
+        },
+        "numbers": {
+            "match": "\\b\\d+(\\.\\d+)?\\b",
+            "name": "constant.numeric.vex"
+        },
+        "functions": {
+            "match": "\\b([a-zA-Z_]\\w*)\\s*(?=\\()",
+            "name": "entity.name.function.vex"
+        }
+    }
+}

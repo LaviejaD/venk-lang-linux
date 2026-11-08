@@ -1,0 +1,279 @@
+================================================================================
+                               V E N K   L A N G U A G E
+                            FULL Documentation & Cheat Sheet
+================================================================================
+
+--------------------------------------------------------------------------------
+1. BASIC SYNTAX
+--------------------------------------------------------------------------------
+// Variables
+let x = 10;           // Immutable variable
+mut y = 20;           // Mutable variable
+let z: float = 3.14;  // With explicit type
+
+// Loops & Conditions
+if x > 10 { print("Big"); } elif x == 10 { print("Equal"); } else { print("Small"); }
+while x > 0 { x -= 1; }
+for i in range(0, 10) { print(i); }
+
+// Functions & Structs
+fn add(a: int, b: int) -> int { return a + b; }
+struct Player { name: string, hp: int }
+impl Player { fn heal(mut self, amount: int) { self.hp += amount; } }
+
+--------------------------------------------------------------------------------
+2. CORE BUILTINS: MATH & RANDOM
+--------------------------------------------------------------------------------
+abs(n)                  - Returns the absolute value of a number.
+sign(n)                 - Returns -1, 0, or 1 based on the number's sign.
+min(a, b) / max(a, b)   - Returns the minimum or maximum of two numbers.
+clamp(x, min, max)      - Constrains a value to be within a range.
+sum(arr)                - Returns the sum of all numbers in an array.
+avg(arr)                - Returns the average of all numbers in an array.
+floor(n) / ceil(n)      - Rounds a float down or up to the nearest integer.
+round(n)                - Rounds a float to the nearest integer.
+sqrt(n) / cbrt(n)       - Returns the square root or cube root.
+pow(base, exp)          - Raises a number to a power.
+exp(n) / log(n)         - Returns the exponential or natural logarithm.
+log2(n) / log10(n)      - Returns the base-2 or base-10 logarithm.
+sin(n) / cos(n) / tan(n)- Returns trigonometric sine, cosine, and tangent.
+random()                - Returns a random float between 0.0 and 1.0.
+random_int(min, max)    - Returns a random integer within a range.
+random_float(min, max)  - Returns a random float within a range.
+random_bool()           - Returns true or false randomly.
+seed(n)                 - Sets the seed for random number generation.
+
+--------------------------------------------------------------------------------
+3. CORE BUILTINS: STRINGS
+--------------------------------------------------------------------------------
+len(s)                  - Returns the length of a string (or array/map).
+char_count(s)           - Returns the number of unicode characters in a string.
+upper(s) / lower(s)     - Converts a string to uppercase or lowercase.
+capitalize(s)           - Uppercases the first letter of a string.
+title(s)                - Uppercases the first letter of every word.
+trim(s)                 - Removes whitespace from both ends.
+trim_start(s)           - Removes whitespace from the start.
+trim_end(s)             - Removes whitespace from the end.
+split(s, sep)           - Splits a string into an array by a separator.
+join(arr, sep)          - Joins an array of strings into one string with a separator.
+replace(s, from, to)    - Replaces the first occurrence of a substring.
+replace_all(s, f, t)    - Replaces all occurrences of a substring.
+starts_with(s, prefix)  - Checks if a string starts with a prefix.
+ends_with(s, suffix)    - Checks if a string ends with a suffix.
+includes(s, sub)        - Checks if a string contains a substring.
+index_of(s, sub)        - Returns the index of a substring, or -1.
+slice(s, start, end)    - Extracts a part of a string.
+repeat(s, count)        - Repeats a string a given number of times.
+pad_start(s, w, char)   - Pads the start of a string to a certain width.
+pad_end(s, w, char)     - Pads the end of a string to a certain width.
+chars(s)                - Converts a string into an array of characters.
+bytes(s)                - Converts a string into an array of bytes.
+
+--------------------------------------------------------------------------------
+4. CORE BUILTINS: ARRAYS & MAPS
+--------------------------------------------------------------------------------
+push(arr, item)         - Adds an item to the end of an array.
+pop(arr)                - Removes and returns the last item.
+shift(arr)              - Removes and returns the first item.
+unshift(arr, item)      - Adds an item to the beginning of an array.
+insert(arr, i, item)    - Inserts an item at a specific index.
+remove_at(arr, i)       - Removes an item at a specific index.
+first(arr) / last(arr)  - Returns the first or last element of an array.
+fill(count, value)      - Creates an array filled with a specific value.
+range(start, end, step) - Creates an array of numbers in a range.
+concat(arr1, arr2)      - Combines two arrays.
+reversed(arr)           - Returns a reversed copy of an array.
+unique(arr)             - Removes duplicate items from an array.
+chunk(arr, size)        - Splits an array into chunks of a certain size.
+flatten(arr)            - Flattens a nested array by one level.
+zip(arr1, arr2)         - Combines two arrays into an array of pairs.
+with(arr, item)         - Returns a new array with an item added.
+without_last(arr)       - Returns a new array without the last item.
+enumerate(arr)          - Returns an array of [index, value] pairs.
+
+keys(map)               - Returns an array of a map's keys.
+values(map)             - Returns an array of a map's values.
+entries(map)            - Returns an array of [key, value] pairs.
+get(map, key)           - Returns an Option containing the value.
+get_or(map, key, def)   - Returns the value or a default if not found.
+set(map, key, val)      - Sets a key-value pair in a map.
+has(map, key)           - Checks if a map contains a key.
+delete(map, key)        - Removes a key-value pair.
+merge(map1, map2)       - Combines two maps.
+set_create(arr)         - Creates a mathematical Set from an array.
+set_union(s1, s2)       - Returns the union of two sets.
+set_intersect(s1, s2)   - Returns the intersection of two sets.
+set_difference(s1, s2)  - Returns the difference between two sets.
+
+--------------------------------------------------------------------------------
+5. CORE BUILTINS: CONVERSION, FUNCTIONAL & SYSTEM
+--------------------------------------------------------------------------------
+to_int(v) / to_float(v) - Converts a value to an integer or float.
+to_string(v)            - Converts a value to a string.
+to_bool(v)              - Converts a value to a boolean.
+to_array(v) / to_set(v) - Converts a value to an array or set.
+parse_int(s)            - Parses a string into an integer (returns Result).
+parse_float(s)          - Parses a string into a float (returns Result).
+type_of(v)              - Returns the type name of a value as a string.
+is_null(v), is_int(v)   - Checks the type of a value.
+
+map(arr, fn)            - Applies a function to every item in an array.
+filter(arr, fn)         - Keeps only items that return true from a function.
+reduce(arr, fn, init)   - Reduces an array to a single value using a function.
+for_each(arr, fn)       - Executes a function for each item.
+find(arr, fn)           - Returns the first item that matches a condition.
+find_index(arr, fn)     - Returns the index of the first matching item.
+some(arr, fn)           - Checks if ANY item matches a condition.
+every(arr, fn)          - Checks if ALL items match a condition.
+sorted(arr)             - Returns a sorted copy of an array.
+sorted_desc(arr)        - Returns a descending sorted copy.
+sorted_by(arr, fn)      - Sorts an array based on a custom function.
+
+sha256(s) / md5(s)      - Returns the hash of a string.
+base64_encode(s)        - Encodes a string to Base64.
+base64_decode(s)        - Decodes a Base64 string.
+now_ms() / now_unix()   - Returns the current time in ms or seconds.
+sleep(ms)               - Pauses the program for a number of milliseconds.
+read_file(path)         - Reads a file (returns Result).
+write_file(path, text)  - Writes to a file (returns Result).
+print(text)             - Prints text to the console.
+exit(code)              - Closes the program with an exit code.
+
+--------------------------------------------------------------------------------
+6. 2D GRAPHICS (gfx)
+--------------------------------------------------------------------------------
+init_window(w, h, title)- Opens a 2D game window.
+close_window()          - Closes the window.
+should_close()          - Returns true if the user clicks the X button.
+begin_drawing()         - Starts drawing the current frame.
+end_drawing()           - Ends drawing and displays the frame.
+clear(r, g, b)          - Clears the background with an RGB color.
+screen_width()          - Returns the width of the window.
+set_fps(fps)            - Limits the game to a specific frame rate.
+toggle_fullscreen()     - Switches between windowed and fullscreen mode.
+
+// 2D Vectors
+vec2_add(x1,y1, x2,y2)  - Adds two 2D vectors.
+vec2_sub(x1,y1, x2,y2)  - Subtracts two 2D vectors.
+vec2_mul(x, y, scalar)  - Multiplies a 2D vector by a number.
+vec2_length(x, y)       - Returns the length (magnitude) of a vector.
+vec2_normalize(x, y)    - Returns a vector with a length of 1.
+vec2_distance(x1,y1,x2,y2)- Returns the distance between two points.
+vec2_lerp(x1,y1,x2,y2,t)- Interpolates smoothly between two vectors.
+vec2_rotate(x, y, angle)- Rotates a vector by an angle.
+
+// Sprites & Textures
+load_texture(path)      - Loads an image into memory.
+draw_sprite(id, x,y, rot, scale, fx, fy) - Draws a texture on screen.
+draw_texture_pro(...)   - Draws a portion of a texture with scaling and rotation.
+draw_texture_tiled(...) - Repeats a texture to fill a rectangular area.
+
+// Fonts & Text
+load_font(path, size)   - Loads a custom font file.
+load_system_font(name, size) - Loads a Windows system font (e.g., "Arial").
+draw_text_ex(id, txt, x,y, size, space, r,g,b) - Draws text with a custom font.
+draw_text_centered(...) - Draws text in the middle of the screen.
+draw_text_shadow(...)   - Draws text with a drop shadow.
+measure_text(txt, size) - Returns the width and height of a text string.
+
+// Primitives & Shapes
+line(x1,y1,x2,y2, thick, r,g,b) - Draws a line.
+rect(x, y, w, h, r, g, b)       - Draws a filled rectangle.
+rect_rounded(x,y,w,h,rad,r,g,b) - Draws a rectangle with rounded corners.
+rect_gradient_v(...)            - Draws a vertical color gradient.
+circle(x, y, rad, r, g, b)      - Draws a filled circle.
+triangle(x1,y1,x2,y2,x3,y3,r,g,b)- Draws a filled triangle.
+draw_health_bar(x,y,w,h,cur,max,r,g,b) - Draws a classic RPG health bar.
+
+// UI & Camera
+gui_button(x, y, w, h, text) - Draws a clickable button (returns true if clicked).
+gui_slider(x, y, w, h, val)  - Draws a slider (returns the new value).
+begin_camera(x, y, zoom)     - Activates a 2D camera.
+end_camera()                 - Deactivates the 2D camera.
+shake_camera(intensity)      - Shakes the screen for a few frames.
+camera_screen_to_world(...)  - Converts mouse coordinates to world coordinates.
+
+// Input & Audio
+key_down("W")           - Returns true if the key is held down.
+key_pressed("SPACE")    - Returns true if the key was pressed this frame.
+mouse_click()           - Returns true if the left mouse button was clicked.
+mouse_pos()             - Returns the X and Y position of the mouse.
+mouse_in_rect(x,y,w,h)  - Checks if the mouse is inside a rectangle.
+load_sound(path)        - Loads a sound effect.
+play_sound(id)          - Plays a sound effect.
+
+--------------------------------------------------------------------------------
+7. 3D GRAPHICS (vek3d)
+--------------------------------------------------------------------------------
+// 3D Vectors
+vek3d_vec3(x, y, z)     - Creates a 3D vector.
+vek3d_vec3_add(v1, v2)  - Adds two 3D vectors.
+vek3d_vec3_sub(v1, v2)  - Subtracts two 3D vectors.
+vek3d_vec3_length(v)    - Returns the length of a 3D vector.
+vek3d_vec3_cross(v1,v2) - Returns the cross product of two vectors.
+vek3d_vec3_lerp(v1,v2,t)- Smoothly interpolates between two 3D vectors.
+
+// Camera
+vek3d_camera_create(px,py,pz, tx,ty,tz, fov) - Creates a 3D camera.
+vek3d_camera_update_pos(id, px,py,pz, tx,ty,tz) - Moves the camera.
+vek3d_camera_begin(id)  - Activates 3D drawing mode.
+vek3d_camera_end()      - Deactivates 3D drawing mode.
+vek3d_camera_update_fps(id, dt, speed, sens) - First-person controls (WASD + Mouse).
+
+// 3D Primitives & Structures
+vek3d_draw_cube(x,y,z, w,h,l, r,g,b) - Draws a 3D cube.
+vek3d_draw_sphere(x,y,z, rad, r,g,b) - Draws a 3D sphere.
+vek3d_draw_grid(size, spacing)       - Draws a 3D floor grid.
+vek3d_draw_tree(x, y, z)             - Draws a ready-made tree (trunk + leaves).
+vek3d_draw_house(x, y, z)            - Draws a ready-made house.
+vek3d_draw_npc(x, y, z, r,g,b)       - Draws a humanoid NPC.
+
+// 3D Models & Animation
+vek3d_model_load(path)               - Loads a 3D model (.obj or .gltf).
+vek3d_model_load_anim(model, anim)   - Loads a 3D model with skeletal animations.
+vek3d_model_update_anim(id, dt)      - Updates the animation frame.
+vek3d_model_draw(id, x,y,z, rot, scale, r,g,b) - Draws the 3D model.
+
+// Particles & World Generation
+vek3d_particles_create_cube(size, r,g,b) - Creates a 3D particle system.
+vek3d_particles_spawn(id, count, w,h,d)  - Spawns particles in an area.
+vek3d_particles_update(id, dt)           - Updates particle physics.
+vek3d_particles_draw(id)                 - Draws the particles.
+vek3d_world_noise(x, y)                  - Returns noise (0.0 to 1.0) for procedural maps.
+vek3d_npc_move_towards(npc_pos, target, speed) - AI movement towards a target.
+
+// Physics & Collisions
+vek3d_ray_sphere(ox,oy,oz, dx,dy,dz, cx,cy,cz, rad) - Checks if a ray hits a sphere.
+vek3d_check_collision_spheres(pos1, rad1, pos2, rad2) - Checks if two spheres collide.
+vek3d_check_collision_boxes(min1, max1, min2, max2) - Checks if two 3D boxes collide.
+
+--------------------------------------------------------------------------------
+8. STANDARD MODULES
+--------------------------------------------------------------------------------
+// --- pvenk (OS, FS, Regex, Time) ---
+pvenk_dir_create(path)          - Creates a directory.
+pvenk_file_delete(path)         - Deletes a file.
+pvenk_regex_match(text, pat)    - Checks if text matches a regex pattern.
+pvenk_time_now_str()            - Returns the current date and time as a string.
+
+// --- jvenk (JSON, HTTP) ---
+jvenk_json_stringify(val)       - Converts a Venk object to a JSON string.
+jvenk_json_parse(str)           - Converts a JSON string to a Venk object.
+jvenk_http_get(url)             - Sends an HTTP GET request.
+jvenk_http_post(url, body)      - Sends an HTTP POST request.
+
+// --- gdvenk (Signals, Timers) ---
+gdvenk_timer_start()            - Starts a stopwatch.
+gdvenk_timer_elapsed(id)        - Returns how much time has passed.
+gdvenk_signal_connect(name, fn) - Connects a function to a custom event.
+gdvenk_signal_emit(name)        - Triggers a custom event.
+
+// --- cppvenk (Memory, OS, Threads) ---
+cppvenk_mem_alloc(size)         - Allocates raw memory.
+cppvenk_mem_free(ptr)           - Frees raw memory.
+cppvenk_os_exec(cmd)            - Executes a system terminal command.
+cppvenk_thread_spawn(script)    - Runs another Venk script in a separate thread.
+
+// --- lvenk (Lua Patterns) ---
+lvenk_pattern_match(text, pat)  - Matches text using Lua-style patterns.
+lvenk_table_insert(arr, item)   - Inserts an item (Lua style).

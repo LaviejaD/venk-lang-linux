@@ -1,0 +1,22 @@
+{
+    "name": "vex-lang",
+    "displayName": "Vex Language",
+    "description": "Syntax highlighting for Vex.script",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.70.0"
+    },
+    "categories": ["Programming Languages"],
+    "contributes": {
+        "languages": [{
+            "id": "vex",
+            "aliases": ["Vex", "vex"],
+            "extensions": [".vex"]
+        }],
+        "grammars": [{
+            "language": "vex",
+            "scopeName": "source.vex",
+            "path": "./syntaxes/vex.tmLanguage.json"
+        }]
+    }
+}

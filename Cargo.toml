@@ -1,0 +1,16 @@
+[package]
+name = "vekn"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[dependencies]
+rustyline = "13.0"
+raylib = { version = "5.5", default-features = false, features = ["nobuild"] }
+ureq = "2.9"
+serde_json = "1.0"
+regex = "1.10"
+chrono = "0.4"
+
+[build-dependencies]
+winres = "0.1"
