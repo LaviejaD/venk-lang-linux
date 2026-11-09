@@ -14,6 +14,9 @@ pub struct VeknModel {
     pub anims: Vec<ffi::ModelAnimation>,
     pub current_anim: usize,
     pub anim_frame: f32,
+    pub speed: f32,
+    pub looping: bool,
+    pub paused: bool,
 }
 
 // Структура для системы частиц
@@ -25,17 +28,25 @@ struct ParticleBatch {
     y_max: f32,
 }
 
-// Используем thread_local! для 3D-ассетов (они не Send)
+// Структура для точечного источника света (симуляция)
+pub struct PointLight {
+    pos: ffi::Vector3,
+    color: ffi::Color,
+    intensity: f32,
+    radius: f32,
+}
+
+// Используем thread_local! для 3D-ассетов
 thread_local! {
     static MESHES: RefCell<HashMap<i32, ffi::Mesh>> = RefCell::new(HashMap::new());
     static MODELS: RefCell<HashMap<i32, VeknModel>> = RefCell::new(HashMap::new());
     static CAMERAS: RefCell<HashMap<i32, ffi::Camera3D>> = RefCell::new(HashMap::new());
     static BATCHES: RefCell<HashMap<i32, ParticleBatch>> = RefCell::new(HashMap::new());
+    static LIGHTS: RefCell<HashMap<i32, PointLight>> = RefCell::new(HashMap::new());
 }
 
 static NEXT_ID: AtomicI32 = AtomicI32::new(1);
 
-// Простой генератор случайных чисел для Rust (без внешних крейтов)
 fn local_rand() -> f32 {
     let ns = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos();
     (ns % 10000) as f32 / 10000.0
@@ -43,6 +54,7 @@ fn local_rand() -> f32 {
 
 impl Interp {
     pub(crate) fn call_vek3d(&mut self, name: &str, mut args: Vec<Value>) -> R {
+        // Макросы для проверки типов
         macro_rules! num {
             ($v:expr, $name:expr) => {
                 match $v {
@@ -56,6 +68,7 @@ impl Interp {
             ($v:expr, $name:expr) => {
                 match $v {
                     Value::Int(n) => n as i32,
+                    Value::Float(f) => f as i32,
                     other => return Err(Signal::Runtime(format!("{}: ожидалось число, получен {}", $name, other.type_name()))),
                 }
             };
@@ -71,7 +84,7 @@ impl Interp {
 
         match name {
             // ==========================================
-            // МАТЕМАТИКА ВЕКТОРОВ (Godot-style)
+            // 1. МАТЕМАТИКА ВЕКТОРОВ (Полная)
             // ==========================================
             "vek3d_vec3" => {
                 let x = num!(args.remove(0), name);
@@ -144,7 +157,7 @@ impl Interp {
             }
 
             // ==========================================
-            // ИИ И ГЕНЕРАЦИЯ МИРА
+            // 2. ИИ И ГЕНЕРАЦИЯ МИРА
             // ==========================================
             "vek3d_npc_move_towards" => {
                 let (x1, y1, z1) = extract_vec3(&args.remove(0));
@@ -169,7 +182,7 @@ impl Interp {
             }
 
             // ==========================================
-            // КАМЕРА (Godot-style)
+            // 3. ПРОДВИНУТАЯ КАМЕРА
             // ==========================================
             "vek3d_camera_create" => {
                 let px = num!(args.remove(0), name); let py = num!(args.remove(0), name); let pz = num!(args.remove(0), name);
@@ -190,15 +203,23 @@ impl Interp {
                 let id = int!(args.remove(0), name);
                 let px = num!(args.remove(0), name); let py = num!(args.remove(0), name); let pz = num!(args.remove(0), name);
                 let tx = num!(args.remove(0), name); let ty = num!(args.remove(0), name); let tz = num!(args.remove(0), name);
-                
                 CAMERAS.with(|c| {
-                    let mut cams = c.borrow_mut();
-                    if let Some(cam) = cams.get_mut(&id) {
+                    if let Some(cam) = c.borrow_mut().get_mut(&id) {
                         cam.position = ffi::Vector3 { x: px, y: py, z: pz };
                         cam.target = ffi::Vector3 { x: tx, y: ty, z: tz };
                     }
                 });
                 Ok(Value::Null)
+            }
+            "vek3d_camera_get_pos" => {
+                let id = int!(args.remove(0), name);
+                let mut res = make_vec3(0.0, 0.0, 0.0);
+                CAMERAS.with(|c| {
+                    if let Some(cam) = c.borrow().get(&id) {
+                        res = make_vec3(cam.position.x, cam.position.y, cam.position.z);
+                    }
+                });
+                Ok(res)
             }
             "vek3d_camera_set_fov" => {
                 let id = int!(args.remove(0), name);
@@ -229,10 +250,8 @@ impl Interp {
                 let dt = num!(args.remove(0), name);
                 let speed = num!(args.remove(0), name);
                 let sensitivity = num!(args.remove(0), name);
-                
                 CAMERAS.with(|c| {
-                    let mut cams = c.borrow_mut();
-                    if let Some(cam) = cams.get_mut(&id) {
+                    if let Some(cam) = c.borrow_mut().get_mut(&id) {
                         unsafe {
                             if ffi::IsMouseButtonDown(ffi::MouseButton::MOUSE_BUTTON_RIGHT as i32) {
                                 let mouse_delta = ffi::GetMouseDelta();
@@ -263,6 +282,29 @@ impl Interp {
                 });
                 Ok(Value::Null)
             }
+            "vek3d_camera_third_person" => {
+                let id = int!(args.remove(0), name);
+                let target_x = num!(args.remove(0), name); let target_y = num!(args.remove(0), name); let target_z = num!(args.remove(0), name);
+                let dist = num!(args.remove(0), name);
+                let height = num!(args.remove(0), name);
+                let smooth = num!(args.remove(0), name);
+                
+                CAMERAS.with(|c| {
+                    if let Some(cam) = c.borrow_mut().get_mut(&id) {
+                        let desired_target = ffi::Vector3 { x: target_x, y: target_y + 1.0, z: target_z };
+                        let desired_pos = ffi::Vector3 { x: target_x, y: target_y + height, z: target_z + dist };
+                        
+                        cam.target.x += (desired_target.x - cam.target.x) * smooth;
+                        cam.target.y += (desired_target.y - cam.target.y) * smooth;
+                        cam.target.z += (desired_target.z - cam.target.z) * smooth;
+                        
+                        cam.position.x += (desired_pos.x - cam.position.x) * smooth;
+                        cam.position.y += (desired_pos.y - cam.position.y) * smooth;
+                        cam.position.z += (desired_pos.z - cam.position.z) * smooth;
+                    }
+                });
+                Ok(Value::Null)
+            }
             "vek3d_camera_begin" => {
                 let id = int!(args.remove(0), name);
                 CAMERAS.with(|c| {
@@ -278,28 +320,70 @@ impl Interp {
             }
 
             // ==========================================
-            // СИСТЕМА ЧАСТИЦ
+            // 4. ОСВЕЩЕНИЕ И ТУМАН (Новые)
             // ==========================================
-            "vek3d_particles_create_cube" => {
-                let size = num!(args.remove(0), name);
+            "vek3d_set_fog" => {
+                // В raylib базовый туман без шейдеров не поддерживается, 
+                // но мы можем изменить цвет фона и добавить эффект.
                 let r = int!(args.remove(0), name) as u8;
                 let g = int!(args.remove(0), name) as u8;
                 let b = int!(args.remove(0), name) as u8;
+                let _density = num!(args.remove(0), name);
+                unsafe { ffi::ClearBackground(ffi::Color { r, g, b, a: 255 }); }
+                Ok(Value::Null)
+            }
+            "vek3d_light_create_point" => {
+                let x = num!(args.remove(0), name); let y = num!(args.remove(0), name); let z = num!(args.remove(0), name);
+                let r = int!(args.remove(0), name) as u8; let g = int!(args.remove(0), name) as u8; let b = int!(args.remove(0), name) as u8;
+                let intensity = num!(args.remove(0), name);
+                let radius = num!(args.remove(0), name);
+                let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
+                LIGHTS.with(|l| {
+                    l.borrow_mut().insert(id, PointLight {
+                        pos: ffi::Vector3 { x, y, z },
+                        color: ffi::Color { r, g, b, a: 255 },
+                        intensity,
+                        radius,
+                    });
+                });
+                Ok(Value::Int(id as i64))
+            }
+            "vek3d_light_update_pos" => {
+                let id = int!(args.remove(0), name);
+                let x = num!(args.remove(0), name); let y = num!(args.remove(0), name); let z = num!(args.remove(0), name);
+                LIGHTS.with(|l| {
+                    if let Some(light) = l.borrow_mut().get_mut(&id) {
+                        light.pos = ffi::Vector3 { x, y, z };
+                    }
+                });
+                Ok(Value::Null)
+            }
+            "vek3d_light_draw" => {
+                let id = int!(args.remove(0), name);
+                LIGHTS.with(|l| {
+                    if let Some(light) = l.borrow().get(&id) {
+                        unsafe {
+                            // Рисуем сферу, имитирующую свет
+                            ffi::DrawSphere(light.pos, light.radius * light.intensity, light.color);
+                        }
+                    }
+                });
+                Ok(Value::Null)
+            }
+
+            // ==========================================
+            // 5. СИСТЕМА ЧАСТИЦ
+            // ==========================================
+            "vek3d_particles_create_cube" => {
+                let size = num!(args.remove(0), name);
+                let r = int!(args.remove(0), name) as u8; let g = int!(args.remove(0), name) as u8; let b = int!(args.remove(0), name) as u8;
                 let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
                 unsafe {
                     let mesh = ffi::GenMeshCube(size, size, size);
                     let mut material = ffi::LoadMaterialDefault();
-                    if !material.maps.is_null() {
-                        (*material.maps).color = ffi::Color { r, g, b, a: 255 };
-                    }
+                    if !material.maps.is_null() { (*material.maps).color = ffi::Color { r, g, b, a: 255 }; }
                     BATCHES.with(|bat| {
-                        bat.borrow_mut().insert(id, ParticleBatch {
-                            mesh,
-                            material,
-                            positions: Vec::new(),
-                            speeds: Vec::new(),
-                            y_max: 40.0,
-                        });
+                        bat.borrow_mut().insert(id, ParticleBatch { mesh, material, positions: Vec::new(), speeds: Vec::new(), y_max: 40.0 });
                     });
                 }
                 Ok(Value::Int(id as i64))
@@ -307,20 +391,13 @@ impl Interp {
             "vek3d_particles_spawn" => {
                 let id = int!(args.remove(0), name);
                 let count = int!(args.remove(0), name) as usize;
-                let w = num!(args.remove(0), name);
-                let h = num!(args.remove(0), name);
-                let d = num!(args.remove(0), name);
-                
+                let w = num!(args.remove(0), name); let h = num!(args.remove(0), name); let d = num!(args.remove(0), name);
                 BATCHES.with(|bat| {
                     if let Some(batch) = bat.borrow_mut().get_mut(&id) {
                         batch.y_max = h;
-                        batch.positions.reserve(count);
-                        batch.speeds.reserve(count);
                         for _ in 0..count {
                             batch.positions.push(ffi::Vector3 {
-                                x: (local_rand() - 0.5) * w,
-                                y: local_rand() * h,
-                                z: (local_rand() - 0.5) * d,
+                                x: (local_rand() - 0.5) * w, y: local_rand() * h, z: (local_rand() - 0.5) * d,
                             });
                             batch.speeds.push(2.0 + local_rand() * 8.0);
                         }
@@ -335,9 +412,7 @@ impl Interp {
                     if let Some(batch) = bat.borrow_mut().get_mut(&id) {
                         for i in 0..batch.positions.len() {
                             batch.positions[i].y -= batch.speeds[i] * dt;
-                            if batch.positions[i].y < 0.0 {
-                                batch.positions[i].y = batch.y_max;
-                            }
+                            if batch.positions[i].y < 0.0 { batch.positions[i].y = batch.y_max; }
                         }
                     }
                 });
@@ -348,16 +423,11 @@ impl Interp {
                 BATCHES.with(|bat| {
                     if let Some(batch) = bat.borrow().get(&id) {
                         unsafe {
-                            let mut transforms: Vec<ffi::Matrix> = Vec::with_capacity(batch.positions.len());
                             for pos in &batch.positions {
-                                transforms.push(ffi::Matrix {
-                                    m0: 1.0, m1: 0.0, m2: 0.0, m3: 0.0,
-                                    m4: 0.0, m5: 1.0, m6: 0.0, m7: 0.0,
-                                    m8: 0.0, m9: 0.0, m10: 1.0, m11: 0.0,
-                                    m12: pos.x, m13: pos.y, m14: pos.z, m15: 1.0,
-                                });
-                            }
-                            for transform in transforms {
+                                let transform = ffi::Matrix {
+                                    m0: 1.0, m1: 0.0, m2: 0.0, m3: 0.0, m4: 0.0, m5: 1.0, m6: 0.0, m7: 0.0,
+                                    m8: 0.0, m9: 0.0, m10: 1.0, m11: 0.0, m12: pos.x, m13: pos.y, m14: pos.z, m15: 1.0,
+                                };
                                 ffi::DrawMesh(batch.mesh, batch.material, transform);
                             }
                         }
@@ -367,7 +437,7 @@ impl Interp {
             }
 
             // ==========================================
-            // МОДЕЛИ И АНИМАЦИИ (Godot/Unity-style)
+            // 6. МОДЕЛИ И АНИМАЦИИ
             // ==========================================
             "vek3d_model_load" => {
                 let path = s!(args.remove(0), name);
@@ -377,7 +447,7 @@ impl Interp {
                     let model = ffi::LoadModel(c_path.as_ptr());
                     let anims = Vec::new();
                     MODELS.with(|m| { 
-                        m.borrow_mut().insert(id, VeknModel { model, anims, current_anim: 0, anim_frame: 0.0 }); 
+                        m.borrow_mut().insert(id, VeknModel { model, anims, current_anim: 0, anim_frame: 0.0, speed: 1.0, looping: true, paused: false }); 
                     });
                 }
                 Ok(Value::Int(id as i64))
@@ -390,22 +460,50 @@ impl Interp {
                 let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
                 unsafe {
                     let model = ffi::LoadModel(c_path.as_ptr());
-                    
-                    // ИСПРАВЛЕНИЕ: Ожидается *mut i32, а не u32
                     let mut anims_count: i32 = 0; 
                     let anims_ptr = ffi::LoadModelAnimations(c_anim.as_ptr(), &mut anims_count);
-                    
-                    let anims = if anims_ptr.is_null() { 
-                        Vec::new() 
-                    } else { 
-                        std::slice::from_raw_parts(anims_ptr, anims_count as usize).to_vec() 
-                    };
-                    
+                    let anims = if anims_ptr.is_null() { Vec::new() } else { std::slice::from_raw_parts(anims_ptr, anims_count as usize).to_vec() };
                     MODELS.with(|m| { 
-                        m.borrow_mut().insert(id, VeknModel { model, anims, current_anim: 0, anim_frame: 0.0 }); 
+                        m.borrow_mut().insert(id, VeknModel { model, anims, current_anim: 0, anim_frame: 0.0, speed: 1.0, looping: true, paused: false }); 
                     });
                 }
                 Ok(Value::Int(id as i64))
+            }
+            "vek3d_anim_play" => {
+                let id = int!(args.remove(0), name);
+                let anim_idx = int!(args.remove(0), name) as usize;
+                MODELS.with(|m| {
+                    if let Some(vm) = m.borrow_mut().get_mut(&id) {
+                        if anim_idx < vm.anims.len() {
+                            vm.current_anim = anim_idx;
+                            vm.anim_frame = 0.0;
+                            vm.paused = false;
+                        }
+                    }
+                });
+                Ok(Value::Null)
+            }
+            "vek3d_anim_set_speed" => {
+                let id = int!(args.remove(0), name);
+                let speed = num!(args.remove(0), name);
+                MODELS.with(|m| {
+                    if let Some(vm) = m.borrow_mut().get_mut(&id) { vm.speed = speed; }
+                });
+                Ok(Value::Null)
+            }
+            "vek3d_anim_pause" => {
+                let id = int!(args.remove(0), name);
+                MODELS.with(|m| {
+                    if let Some(vm) = m.borrow_mut().get_mut(&id) { vm.paused = true; }
+                });
+                Ok(Value::Null)
+            }
+            "vek3d_anim_resume" => {
+                let id = int!(args.remove(0), name);
+                MODELS.with(|m| {
+                    if let Some(vm) = m.borrow_mut().get_mut(&id) { vm.paused = false; }
+                });
+                Ok(Value::Null)
             }
             "vek3d_model_update_anim" => {
                 let id = int!(args.remove(0), name);
@@ -413,13 +511,12 @@ impl Interp {
                 MODELS.with(|m| {
                     let mut models = m.borrow_mut();
                     if let Some(vm) = models.get_mut(&id) {
-                        if !vm.anims.is_empty() {
-                            vm.anim_frame += dt * 30.0;
+                        if !vm.anims.is_empty() && !vm.paused {
+                            vm.anim_frame += (dt * 30.0) * vm.speed;
                             unsafe {
                                 let anim = &vm.anims[vm.current_anim];
-                                // ИСПРАВЛЕНИЕ: приведение к i32
                                 let frame = (vm.anim_frame as i32) % (anim.frameCount as i32);
-                                ffi::UpdateModelAnimation(vm.model, *anim, frame as i32); 
+                                ffi::UpdateModelAnimation(vm.model, *anim, frame as i32);
                             }
                         }
                     }
@@ -456,7 +553,7 @@ impl Interp {
             }
 
             // ==========================================
-            // МЕШИ (Примитивы)
+            // 7. МЕШИ (Примитивы)
             // ==========================================
             "vek3d_mesh_cube" => {
                 let w = num!(args.remove(0), name); let h = num!(args.remove(0), name); let l = num!(args.remove(0), name);
@@ -483,8 +580,17 @@ impl Interp {
                 let slices = int!(args.remove(0), name) as i32;
                 let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
                 unsafe {
-                    // ИСПРАВЛЕНИЕ: передаем ровно 3 аргумента
                     let mesh = ffi::GenMeshCylinder(r_top, h, slices); 
+                    MESHES.with(|m| { m.borrow_mut().insert(id, mesh); });
+                }
+                Ok(Value::Int(id as i64))
+            }
+            "vek3d_mesh_gen_plane" => {
+                let w = num!(args.remove(0), name); let l = num!(args.remove(0), name);
+                let res_x = int!(args.remove(0), name) as i32; let res_z = int!(args.remove(0), name) as i32;
+                let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
+                unsafe {
+                    let mesh = ffi::GenMeshPlane(w, l, res_x, res_z);
                     MESHES.with(|m| { m.borrow_mut().insert(id, mesh); });
                 }
                 Ok(Value::Int(id as i64))
@@ -519,7 +625,7 @@ impl Interp {
             }
 
             // ==========================================
-            // ПРИМИТИВЫ И СТРУКТУРЫ
+            // 8. ПРИМИТИВЫ И СТРУКТУРЫ
             // ==========================================
             "vek3d_draw_cube" => {
                 let x = num!(args.remove(0), name); let y = num!(args.remove(0), name); let z = num!(args.remove(0), name);
@@ -574,7 +680,7 @@ impl Interp {
             }
 
             // ==========================================
-            // ФИЗИКА И КОЛЛИЗИИ (Godot-style)
+            // 9. ФИЗИКА И КОЛЛИЗИИ
             // ==========================================
             "vek3d_check_collision_spheres" => {
                 let (x1, y1, z1) = extract_vec3(&args.remove(0));
@@ -621,6 +727,18 @@ impl Interp {
                     Ok(Value::Bool(coll.hit))
                 }
             }
+            "vek3d_physics_apply_gravity" => {
+                let pos = extract_vec3(&args.remove(0));
+                let vel = extract_vec3(&args.remove(0));
+                let gravity = num!(args.remove(0), name);
+                let dt = num!(args.remove(0), name);
+                let new_vy = vel.1 + gravity * dt;
+                let new_y = pos.1 + new_vy * dt;
+                Ok(Value::Tuple(Rc::new(vec![
+                    make_vec3(pos.0, new_y, pos.2),
+                    make_vec3(vel.0, new_vy, vel.2)
+                ])))
+            }
 
             other => Err(Signal::Runtime(format!("vek3d '{}' не реализован", other))),
         }
@@ -628,7 +746,7 @@ impl Interp {
 }
 
 // ==========================================
-// ХЕЛПЕРЫ ДЛЯ ВЕКТОРОВ (Чистый Rust)
+// ХЕЛПЕРЫ ДЛЯ ВЕКТОРОВ
 // ==========================================
 fn make_vec3(x: f32, y: f32, z: f32) -> Value {
     let fields = vec![
@@ -646,32 +764,18 @@ fn extract_vec3(v: &Value) -> (f32, f32, f32) {
         let y = f.iter().find(|(k, _)| k == "y").map(|(_, v)| match v { Value::Float(n) => *n as f32, Value::Int(n) => *n as f32, _ => 0.0 }).unwrap_or(0.0);
         let z = f.iter().find(|(k, _)| k == "z").map(|(_, v)| match v { Value::Float(n) => *n as f32, Value::Int(n) => *n as f32, _ => 0.0 }).unwrap_or(0.0);
         (x, y, z)
-    } else {
-        (0.0, 0.0, 0.0)
-    }
+    } else { (0.0, 0.0, 0.0) }
 }
 
-// Математические операции над векторами
-fn vec3_add(a: ffi::Vector3, b: ffi::Vector3) -> ffi::Vector3 { 
-    ffi::Vector3 { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z } 
-}
-fn vec3_sub(a: ffi::Vector3, b: ffi::Vector3) -> ffi::Vector3 { 
-    ffi::Vector3 { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z } 
-}
-fn vec3_scale(a: ffi::Vector3, scalar: f32) -> ffi::Vector3 { 
-    ffi::Vector3 { x: a.x * scalar, y: a.y * scalar, z: a.z * scalar } 
-}
+fn vec3_add(a: ffi::Vector3, b: ffi::Vector3) -> ffi::Vector3 { ffi::Vector3 { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z } }
+fn vec3_sub(a: ffi::Vector3, b: ffi::Vector3) -> ffi::Vector3 { ffi::Vector3 { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z } }
+fn vec3_scale(a: ffi::Vector3, scalar: f32) -> ffi::Vector3 { ffi::Vector3 { x: a.x * scalar, y: a.y * scalar, z: a.z * scalar } }
 fn vec3_normalize(a: ffi::Vector3) -> ffi::Vector3 {
     let len = (a.x * a.x + a.y * a.y + a.z * a.z).sqrt();
-    if len == 0.0 { ffi::Vector3 { x: 0.0, y: 0.0, z: 0.0 } } 
-    else { ffi::Vector3 { x: a.x / len, y: a.y / len, z: a.z / len } }
+    if len == 0.0 { ffi::Vector3 { x: 0.0, y: 0.0, z: 0.0 } } else { ffi::Vector3 { x: a.x / len, y: a.y / len, z: a.z / len } }
 }
 fn vec3_cross(a: ffi::Vector3, b: ffi::Vector3) -> ffi::Vector3 {
-    ffi::Vector3 {
-        x: a.y * b.z - a.z * b.y,
-        y: a.z * b.x - a.x * b.z,
-        z: a.x * b.y - a.y * b.x,
-    }
+    ffi::Vector3 { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x }
 }
 fn vec3_rotate_axis(v: ffi::Vector3, axis: ffi::Vector3, angle: f32) -> ffi::Vector3 {
     let k = vec3_normalize(axis);
@@ -679,7 +783,6 @@ fn vec3_rotate_axis(v: ffi::Vector3, axis: ffi::Vector3, angle: f32) -> ffi::Vec
     let sin_theta = angle.sin();
     let cross = vec3_cross(k, v);
     let dot = k.x * v.x + k.y * v.y + k.z * v.z;
-    
     ffi::Vector3 {
         x: v.x * cos_theta + cross.x * sin_theta + k.x * dot * (1.0 - cos_theta),
         y: v.y * cos_theta + cross.y * sin_theta + k.y * dot * (1.0 - cos_theta),

@@ -16,6 +16,7 @@ mod lvenk;
 mod cppvenk;
 mod vek3d;
 mod worldgen;
+mod rvenk;
 
 use error::Diagnostics;
 use rustyline::error::ReadlineError;

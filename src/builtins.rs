@@ -27,6 +27,9 @@ impl Interp {
         if name.starts_with("vek3d_") { 
             return self.call_vek3d(name, args); 
         }
+        if name.starts_with("rvenk_") {  // <--- ДОБАВЛЕНО
+            return self.call_rvenk(name, args); 
+        }
         // ==========================================
 
         // Макросы для удобного извлечения аргументов
@@ -2460,4 +2463,93 @@ fn bundle_file(path: &str, seen: &mut std::collections::HashSet<String>) -> Resu
         }
     }
     Ok(output)
+}
+
+fn is_builtin(name: &str) -> bool {
+    if name.starts_with("pvenk_")
+        || name.starts_with("jvenk_")
+        || name.starts_with("gdvenk_")
+        || name.starts_with("lvenk_")
+        || name.starts_with("cppvenk_")
+        || name.starts_with("vek3d_")
+        || name.starts_with("rvenk_")  // <--- ДОБАВЛЕНО
+    {
+        return true;
+    }
+
+    matches!(
+        name,
+        // Базовые функции
+        "build" |
+        "abs" | "sign" | "min" | "max" | "clamp" | "sum" | "avg" |
+        "floor" | "ceil" | "round" | "sqrt" | "cbrt" | "pow" |
+        "exp" | "log" | "log2" | "log10" | "sin" | "cos" | "tan" |
+        "random" | "random_int" | "random_float" | "random_bool" | "seed" |
+        "len" | "char_count" | "upper" | "lower" | "capitalize" | "title" |
+        "trim" | "trim_start" | "trim_end" | "split" | "join" |
+        "replace" | "replace_all" | "starts_with" | "ends_with" | "includes" |
+        "index_of" | "slice" | "repeat" | "pad_start" | "pad_end" |
+        "chars" | "bytes" |
+        "push" | "pop" | "shift" | "unshift" | "insert" | "remove_at" |
+        "first" | "last" | "fill" | "range" |
+        "concat" | "reversed" | "unique" | "chunk" | "flatten" | "zip" |
+        "with" | "without_last" | "enumerate" |
+        "keys" | "values" | "entries" | "get" | "get_or" | "set" | "has" | "delete" | "merge" |
+        "clone" | "from_entries" | "to_entries" |
+        "set_create" | "set_add" | "set_remove" | "set_has" | "set_union" |
+        "set_intersect" | "set_difference" | "set_to_array" |
+        "to_int" | "to_float" | "to_string" | "to_bool" | "to_array" | "to_map" | "to_set" |
+        "parse_int" | "parse_float" | "parse_bool" |
+        "type_of" | "is_null" | "is_number" | "is_int" | "is_float" | "is_string" |
+        "is_bool" | "is_array" | "is_map" | "is_function" |
+        "map" | "filter" | "reduce" | "for_each" | "find" | "find_index" |
+        "some" | "every" | "group_by" | "partition" |
+        "sorted" | "sorted_by" | "sorted_by_key" | "sorted_desc" |
+        "binary_search" | "linear_search" | "min_by" | "max_by" | "top_k" | "count_by" |
+        "md5" | "sha1" | "sha256" | "hmac_sha256" |
+        "base64_encode" | "base64_decode" | "hex_encode" | "hex_decode" |
+        "url_encode" | "url_decode" |
+        "now" | "now_ms" | "now_unix" | "sleep" |
+        "read_file" | "write_file" | "append_file" | "file_exists" | "read_lines" | "write_lines" |
+        "print" | "input" | "env_get" | "args" | "cwd" | "platform" | "exit" | "assert" | "panic" |
+        "Ok" | "Err" | "Some" |
+        
+        // Окно, время и система
+        "init_window" | "close_window" | "should_close" | "begin_drawing" | "end_drawing" |
+        "clear" | "clear_alpha" | "screen_width" | "screen_height" | "set_fps" | "get_fps" |
+        "get_frame_time" | "toggle_fullscreen" | "set_window_title" | "set_window_icon" |
+        "set_window_resizable" | "set_vsync" | "time_delta" | "get_time" | "set_time" | "get_time_speed" |
+
+        // Векторы 2D
+        "vec2_add" | "vec2_sub" | "vec2_mul" | "vec2_div" | "vec2_length" | "vec2_normalize" |
+        "vec2_dot" | "vec2_distance" | "vec2_lerp" | "vec2_rotate" | "angle_from_vec" | "vec_from_angle" |
+
+        // Текстуры и спрайты
+        "load_texture" | "unload_texture" | "get_texture_width" | "get_texture_height" |
+        "draw_sprite" | "draw_anim" | "draw_texture_pro" | "draw_texture_tiled" |
+
+        // Шрифты и текст
+        "load_font" | "load_system_font" | "draw_text_ex" | "draw_text_centered" | "draw_text_shadow" |
+        "draw_text_wrapped" | "measure_text" | "measure_text_ex" | "text" |
+
+        // Примитивы 2D и UI
+        "line" | "rect" | "rect_alpha" | "rect_rounded" | "rect_gradient_v" | "rect_gradient_h" |
+        "rect_lines" | "circle" | "circle_lines" | "circle_sector" | "ring" | "triangle" |
+        "triangle_lines" | "poly" | "ellipse" | "pixel" | "draw_health_bar" |
+        "gui_button" | "gui_button_font" | "gui_slider" |
+
+        // Коллизии 2D, камера, ввод
+        "collision" | "collision_circle" | "collision_circle_rect" | "get_distance" | "get_angle" |
+        "lerp" | "apply_gravity" | "begin_camera" | "end_camera" | "shake_camera" |
+        "camera_screen_to_world" | "camera_world_to_screen" |
+        "key_down" | "key_pressed" | "is_key_up" | "is_key_released" | "get_char_pressed" |
+        "mouse_click" | "mouse_button_down" | "mouse_button_released" | "mouse_pos" |
+        "mouse_x" | "mouse_y" | "mouse_delta_x" | "mouse_delta_y" | "get_mouse_wheel" |
+        "set_mouse_position" | "mouse_in_rect" |
+
+        // Аудио и сеть
+        "load_sound" | "play_sound" | "stop_sound" | "unload_sound" |
+        "load_music" | "play_music" | "update_music" | "stop_music" |
+        "open_url" | "http_get" | "json_parse" | "draw_tilemap" | "gen_map" | "eval"
+    )
 }

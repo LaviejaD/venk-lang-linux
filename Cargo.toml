@@ -1,6 +1,6 @@
 [package]
-name = "vekn"
-version = "0.1.0"
+name = "venk"
+version = "0.0.2"
 edition = "2021"
 build = "build.rs"
 

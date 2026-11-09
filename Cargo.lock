@@ -983,8 +983,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a3b425286980a367278453f3b6d28cdcb134b574e5a35824a6ff5eebad50bb6"
 
 [[package]]
-name = "vekn"
-version = "0.1.0"
+name = "venk"
+version = "0.0.2"
 dependencies = [
  "chrono",
  "raylib",

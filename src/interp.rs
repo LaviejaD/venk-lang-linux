@@ -1338,6 +1338,8 @@ fn map_path_to_builtin(segs: &[String]) -> String {
         "cylinder" => format!("vek3d_draw_cylinder_{}", rest),
         "plane3d" => format!("vek3d_draw_plane_{}", rest),
         "grid3d" => "vek3d_draw_grid".to_string(),
+        // RAYLIB МОДУЛИ (ДОБАВЛЕНО)
+        "rvenk" => format!("rvenk_{}", rest),
         _ => segs.join("_"),
     }
 }
@@ -1349,6 +1351,7 @@ fn is_builtin(name: &str) -> bool {
         || name.starts_with("lvenk_")
         || name.starts_with("cppvenk_")
         || name.starts_with("vek3d_")
+        || name.starts_with("rvenk_") // <--- ДОБАВЛЕНО
     {
         return true;
     }
