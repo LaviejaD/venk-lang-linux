@@ -1,8 +1,8 @@
-# 🚀 Venk Language (Beta v0.0.1)
+# 🚀 Venk Language (Beta v0.0.2)
 
 > A modern, high-performance programming language designed for 2D/3D game development and beyond.
 
-![Version](https://img.shields.io/badge/version-0.0.1--beta-blue)
+![Version](https://img.shields.io/badge/version-0.0.2--beta-blue)
 ![Rust](https://img.shields.io/badge/backend-Rust-orange)
 ![License](https://img.shields.io/badge/license-MPL--2.0-green)
 
