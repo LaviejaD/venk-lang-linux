@@ -1,6 +1,7 @@
 ================================================================================
                                V E N K   L A N G U A G E
                             FULL Documentation & Cheat Sheet
+                                  Version: 0.0.2 Beta
 ================================================================================
 
 --------------------------------------------------------------------------------
@@ -114,6 +115,7 @@ to_bool(v)              - Converts a value to a boolean.
 to_array(v) / to_set(v) - Converts a value to an array or set.
 parse_int(s)            - Parses a string into an integer (returns Result).
 parse_float(s)          - Parses a string into a float (returns Result).
+parse_bool(s)           - Parses a string into a boolean (returns Result).
 type_of(v)              - Returns the type name of a value as a string.
 is_null(v), is_int(v)   - Checks the type of a value.
 
@@ -132,15 +134,21 @@ sorted_by(arr, fn)      - Sorts an array based on a custom function.
 sha256(s) / md5(s)      - Returns the hash of a string.
 base64_encode(s)        - Encodes a string to Base64.
 base64_decode(s)        - Decodes a Base64 string.
+hex_encode(s)           - Encodes a string to Hexadecimal.
 now_ms() / now_unix()   - Returns the current time in ms or seconds.
 sleep(ms)               - Pauses the program for a number of milliseconds.
 read_file(path)         - Reads a file (returns Result).
 write_file(path, text)  - Writes to a file (returns Result).
-print(text)             - Prints text to the console.
+append_file(path, text) - Appends to a file (returns Result).
+file_exists(path)       - Checks if a file or directory exists.
+print(text)             - Prints text to the console (and IDE).
+assert(cond, msg)       - Throws an error if condition is false.
+panic(msg)              - Immediately stops execution with an error.
 exit(code)              - Closes the program with an exit code.
+build("file.venk")      - Compiles the script into a standalone executable.
 
 --------------------------------------------------------------------------------
-6. 2D GRAPHICS (gfx)
+6. 2D GRAPHICS (gfx / Core)
 --------------------------------------------------------------------------------
 init_window(w, h, title)- Opens a 2D game window.
 close_window()          - Closes the window.
@@ -151,56 +159,95 @@ clear(r, g, b)          - Clears the background with an RGB color.
 screen_width()          - Returns the width of the window.
 set_fps(fps)            - Limits the game to a specific frame rate.
 toggle_fullscreen()     - Switches between windowed and fullscreen mode.
+set_window_title(title) - Changes the window title.
+set_window_icon(path)   - Sets the window icon.
+time_delta()            - Returns the time between frames (scaled by set_time).
+get_time()              - Returns the total time since initialization.
+set_time(speed)         - Slows down or speeds up time (0.0 to pause).
 
 // 2D Vectors
 vec2_add(x1,y1, x2,y2)  - Adds two 2D vectors.
 vec2_sub(x1,y1, x2,y2)  - Subtracts two 2D vectors.
 vec2_mul(x, y, scalar)  - Multiplies a 2D vector by a number.
+vec2_div(x, y, scalar)  - Divides a 2D vector by a number.
 vec2_length(x, y)       - Returns the length (magnitude) of a vector.
 vec2_normalize(x, y)    - Returns a vector with a length of 1.
+vec2_dot(x1,y1, x2,y2)  - Returns the dot product of two vectors.
 vec2_distance(x1,y1,x2,y2)- Returns the distance between two points.
 vec2_lerp(x1,y1,x2,y2,t)- Interpolates smoothly between two vectors.
 vec2_rotate(x, y, angle)- Rotates a vector by an angle.
+angle_from_vec(x, y)    - Returns the angle of a vector in degrees.
+vec_from_angle(angle)   - Returns a vector from an angle in degrees.
 
 // Sprites & Textures
 load_texture(path)      - Loads an image into memory.
+unload_texture(id)      - Frees the texture from memory.
+get_texture_width(id)   - Returns the width of a loaded texture.
 draw_sprite(id, x,y, rot, scale, fx, fy) - Draws a texture on screen.
+draw_anim(id, x, y, fx, fy, fw, fh)      - Draws a specific frame.
 draw_texture_pro(...)   - Draws a portion of a texture with scaling and rotation.
 draw_texture_tiled(...) - Repeats a texture to fill a rectangular area.
 
 // Fonts & Text
 load_font(path, size)   - Loads a custom font file.
-load_system_font(name, size) - Loads a Windows system font (e.g., "Arial").
+load_system_font(name, size) - Loads a Windows system font (e.g., "arial").
 draw_text_ex(id, txt, x,y, size, space, r,g,b) - Draws text with a custom font.
 draw_text_centered(...) - Draws text in the middle of the screen.
 draw_text_shadow(...)   - Draws text with a drop shadow.
+draw_text_wrapped(...)  - Draws text with automatic line wrapping.
 measure_text(txt, size) - Returns the width and height of a text string.
+measure_text_ex(id, txt, size) - Returns the width and height using a custom font.
 
 // Primitives & Shapes
 line(x1,y1,x2,y2, thick, r,g,b) - Draws a line.
 rect(x, y, w, h, r, g, b)       - Draws a filled rectangle.
+rect_alpha(x,y,w,h,r,g,b,a)     - Draws a transparent rectangle.
 rect_rounded(x,y,w,h,rad,r,g,b) - Draws a rectangle with rounded corners.
 rect_gradient_v(...)            - Draws a vertical color gradient.
+rect_gradient_h(...)            - Draws a horizontal color gradient.
+rect_lines(x,y,w,h,thick,r,g,b)- Draws a rectangle outline.
 circle(x, y, rad, r, g, b)      - Draws a filled circle.
+circle_lines(x, y, rad, r,g,b)  - Draws a circle outline.
+circle_sector(x,y,rad,st,en,r,g,b) - Draws a pie slice.
+ring(x,y,inner,outer,st,en,r,g,b)  - Draws a hollow circle.
 triangle(x1,y1,x2,y2,x3,y3,r,g,b)- Draws a filled triangle.
+triangle_lines(...)             - Draws a triangle outline.
+poly(x, y, sides, rad, rot, r,g,b)- Draws a regular polygon.
+ellipse(x, y, rh, rv, r, g, b)  - Draws an ellipse.
+pixel(x, y, r, g, b)            - Draws a single pixel.
 draw_health_bar(x,y,w,h,cur,max,r,g,b) - Draws a classic RPG health bar.
 
 // UI & Camera
 gui_button(x, y, w, h, text) - Draws a clickable button (returns true if clicked).
+gui_button_font(x,y,w,h,txt,id,fs) - Button with a custom font.
 gui_slider(x, y, w, h, val)  - Draws a slider (returns the new value).
 begin_camera(x, y, zoom)     - Activates a 2D camera.
 end_camera()                 - Deactivates the 2D camera.
 shake_camera(intensity)      - Shakes the screen for a few frames.
 camera_screen_to_world(...)  - Converts mouse coordinates to world coordinates.
+camera_world_to_screen(...)  - Converts world coordinates to screen coordinates.
 
 // Input & Audio
 key_down("W")           - Returns true if the key is held down.
 key_pressed("SPACE")    - Returns true if the key was pressed this frame.
+is_key_up("W")          - Returns true if the key is not pressed.
+is_key_released("SPACE")- Returns true if the key was released this frame.
+get_char_pressed()      - Returns the character typed on the keyboard.
 mouse_click()           - Returns true if the left mouse button was clicked.
+mouse_button_down(btn)  - Returns true if the specified mouse button is held.
 mouse_pos()             - Returns the X and Y position of the mouse.
+mouse_delta_x/y()       - Returns how much the mouse moved since last frame.
+get_mouse_wheel()       - Returns mouse scroll wheel movement.
 mouse_in_rect(x,y,w,h)  - Checks if the mouse is inside a rectangle.
 load_sound(path)        - Loads a sound effect.
 play_sound(id)          - Plays a sound effect.
+stop_sound(id)          - Stops a sound effect.
+load_music(path)        - Loads a music stream.
+play_music(id)          - Plays music.
+update_music(id)        - Updates the music stream (call every frame).
+open_url(url)           - Opens a URL in the default web browser.
+http_get(url)           - Fetches data from a URL.
+json_parse(str)         - Parses a JSON string into a Vekn object.
 
 --------------------------------------------------------------------------------
 7. 3D GRAPHICS (vek3d)
@@ -210,29 +257,54 @@ vek3d_vec3(x, y, z)     - Creates a 3D vector.
 vek3d_vec3_add(v1, v2)  - Adds two 3D vectors.
 vek3d_vec3_sub(v1, v2)  - Subtracts two 3D vectors.
 vek3d_vec3_length(v)    - Returns the length of a 3D vector.
-vek3d_vec3_cross(v1,v2) - Returns the cross product of two vectors.
+vek3d_vec3_dot(v1, v2)  - Returns the dot product.
+vek3d_vec3_cross(v1,v2) - Returns the cross product.
+vek3d_vec3_distance(v1,v2) - Distance between two 3D points.
 vek3d_vec3_lerp(v1,v2,t)- Smoothly interpolates between two 3D vectors.
+vek3d_vec3_rotate_y(v, angle) - Rotates a vector around the Y axis.
 
 // Camera
 vek3d_camera_create(px,py,pz, tx,ty,tz, fov) - Creates a 3D camera.
 vek3d_camera_update_pos(id, px,py,pz, tx,ty,tz) - Moves the camera.
+vek3d_camera_get_pos(id)        - Returns the camera's position.
+vek3d_camera_set_fov(id, fov)   - Changes the camera's field of view.
+vek3d_camera_get_forward(id)    - Returns the direction the camera is facing.
 vek3d_camera_begin(id)  - Activates 3D drawing mode.
 vek3d_camera_end()      - Deactivates 3D drawing mode.
 vek3d_camera_update_fps(id, dt, speed, sens) - First-person controls (WASD + Mouse).
+vek3d_camera_third_person(id, tx,ty,tz, dist, height, smooth) - Follows a target smoothly.
+
+// Lighting & Fog
+vek3d_set_fog(r, g, b, density) - Simulates fog using background colors.
+vek3d_light_create_point(x,y,z, r,g,b, intensity, radius) - Creates a point light.
+vek3d_light_update_pos(id, x, y, z) - Moves the light.
+vek3d_light_draw(id) - Draws a glowing sphere representing the light.
 
 // 3D Primitives & Structures
 vek3d_draw_cube(x,y,z, w,h,l, r,g,b) - Draws a 3D cube.
+vek3d_draw_cube_wires(x,y,z, w,h,l, r,g,b) - Draws a cube outline.
 vek3d_draw_sphere(x,y,z, rad, r,g,b) - Draws a 3D sphere.
 vek3d_draw_grid(size, spacing)       - Draws a 3D floor grid.
 vek3d_draw_tree(x, y, z)             - Draws a ready-made tree (trunk + leaves).
 vek3d_draw_house(x, y, z)            - Draws a ready-made house.
 vek3d_draw_npc(x, y, z, r,g,b)       - Draws a humanoid NPC.
 
+// Meshes (Raw Geometry)
+vek3d_mesh_cube(w,h,l)      - Generates a cube mesh.
+vek3d_mesh_sphere(r,rings,slices) - Generates a sphere mesh.
+vek3d_mesh_gen_plane(w,l,res_x,res_z) - Generates a flat plane mesh.
+vek3d_mesh_unload(id)       - Frees the mesh.
+vek3d_mesh_draw(id, x,y,z, r,g,b) - Draws the raw mesh.
+
 // 3D Models & Animation
 vek3d_model_load(path)               - Loads a 3D model (.obj or .gltf).
 vek3d_model_load_anim(model, anim)   - Loads a 3D model with skeletal animations.
 vek3d_model_update_anim(id, dt)      - Updates the animation frame.
 vek3d_model_draw(id, x,y,z, rot, scale, r,g,b) - Draws the 3D model.
+vek3d_model_unload(id)               - Frees the model.
+vek3d_anim_play(id, anim_idx)        - Plays a specific animation.
+vek3d_anim_set_speed(id, speed)      - Changes animation playback speed.
+vek3d_anim_pause(id) / vek3d_anim_resume(id) - Pauses or resumes animation.
 
 // Particles & World Generation
 vek3d_particles_create_cube(size, r,g,b) - Creates a 3D particle system.
@@ -244,36 +316,163 @@ vek3d_npc_move_towards(npc_pos, target, speed) - AI movement towards a target.
 
 // Physics & Collisions
 vek3d_ray_sphere(ox,oy,oz, dx,dy,dz, cx,cy,cz, rad) - Checks if a ray hits a sphere.
+vek3d_ray_box(ox,oy,oz, dx,dy,dz, min, max) - Checks if a ray hits a box.
 vek3d_check_collision_spheres(pos1, rad1, pos2, rad2) - Checks if two spheres collide.
 vek3d_check_collision_boxes(min1, max1, min2, max2) - Checks if two 3D boxes collide.
+vek3d_physics_apply_gravity(pos, vel, gravity, dt) - Returns new [position, velocity].
 
 --------------------------------------------------------------------------------
-8. STANDARD MODULES
+8. RAW RAYLIB BINDINGS (rvenk)
+--------------------------------------------------------------------------------
+*Note: You can access raylib directly using the `rvenk::` prefix.*
+
+// Window & System
+rvenk::init_window(w, h, title) - Opens a raw Raylib window.
+rvenk::close_window()           - Closes the window.
+rvenk::window_should_close()    - Checks if window should close.
+rvenk::begin_drawing()          - Start frame.
+rvenk::end_drawing()            - End frame.
+rvenk::clear_background(r,g,b,a) - Clear screen with RGBA.
+rvenk::set_target_fps(fps)      - Set FPS target.
+rvenk::get_fps()                - Get current FPS.
+rvenk::get_screen_width()       - Get screen width.
+rvenk::get_screen_height()      - Get screen height.
+rvenk::set_window_title(title)  - Change title.
+rvenk::take_screenshot(name)    - Saves a screenshot to disk.
+
+// 2D Shapes
+rvenk::draw_pixel(x, y, r,g,b,a) - Draw a pixel.
+rvenk::draw_line(x1,y1,x2,y2, r,g,b,a) - Draw a line.
+rvenk::draw_circle(x, y, rad, r,g,b,a) - Draw a circle.
+rvenk::draw_rectangle(x,y,w,h, r,g,b,a) - Draw a rect.
+rvenk::draw_rectangle_lines(x,y,w,h, r,g,b,a) - Draw rect outline.
+rvenk::draw_triangle(x1,y1,x2,y2,x3,y3, r,g,b,a) - Draw a triangle.
+
+// 3D & Camera
+rvenk::begin_mode_3d(px,py,pz, tx,ty,tz, fovy) - Begin 3D mode manually.
+rvenk::end_mode_3d() - End 3D mode.
+rvenk::draw_cube(x,y,z, w,h,l, r,g,b,a) - Draw a 3D cube.
+rvenk::draw_sphere(x,y,z, rad, r,g,b,a) - Draw a 3D sphere.
+rvenk::draw_cylinder(x,y,z, r_top,r_bot,h, slices, r,g,b,a) - Draw a cylinder.
+rvenk::draw_plane(x,y,z, w,l, r,g,b,a) - Draw a plane.
+rvenk::draw_line_3d(x1,y1,z1, x2,y2,z2, r,g,b,a) - Draw a 3D line.
+
+// Input
+rvenk::is_key_down(key)      - Check if key is held.
+rvenk::is_key_pressed(key)   - Check if key was just pressed.
+rvenk::is_key_released(key)  - Check if key was just released.
+rvenk::is_key_up(key)        - Check if key is up.
+rvenk::get_mouse_x() / get_mouse_y() - Mouse position.
+rvenk::get_mouse_position()  - Returns mouse [x, y].
+rvenk::is_mouse_button_pressed(btn) - Mouse button pressed.
+rvenk::is_mouse_button_down(btn) - Mouse button held.
+rvenk::get_mouse_wheel_move() - Mouse scroll.
+
+// Textures & Fonts
+rvenk::load_texture(path)    - Load a texture (returns ID).
+rvenk::draw_texture(id,x,y, r,g,b,a) - Draw a texture.
+rvenk::draw_text(text, x,y, font_size, r,g,b,a) - Draw basic text.
+rvenk::measure_text(text, font_size) - Get text width.
+rvenk::load_font(path, size) - Load a custom font.
+rvenk::draw_text_ex(id, text, x,y, size, spacing, r,g,b,a) - Draw text with font.
+
+// Audio
+rvenk::init_audio_device()   - Init audio.
+rvenk::close_audio_device()  - Close audio.
+rvenk::load_sound(path)      - Load sound.
+rvenk::play_sound(id) / stop_sound(id) - Play/Stop sound.
+rvenk::load_music_stream(path) - Load music.
+rvenk::play_music_stream(id) / stop_music_stream(id) - Play/Stop music.
+rvenk::update_music_stream(id) - Update music (call every frame).
+
+// 3D Models & Shaders
+rvenk::load_model(path)      - Load 3D model.
+rvenk::draw_model(id,x,y,z,scale, r,g,b,a) - Draw model.
+rvenk::unload_model(id)      - Free model.
+rvenk::load_shader(vs, fs)   - Load vertex/fragment shaders.
+rvenk::begin_shader_mode(id) / end_shader_mode() - Shader drawing.
+
+// Math & Misc
+rvenk::clamp(val, min, max)  - Clamp a value.
+rvenk::lerp(start, end, amount) - Linear interpolation.
+rvenk::open_url(url)         - Open URL.
+rvenk::get_clipboard_text() / set_clipboard_text(text) - Clipboard.
+rvenk::is_window_ready() / is_window_fullscreen() - Window state.
+
+--------------------------------------------------------------------------------
+9. STANDARD MODULES
 --------------------------------------------------------------------------------
 // --- pvenk (OS, FS, Regex, Time) ---
 pvenk_dir_create(path)          - Creates a directory.
+pvenk_dir_list(path)            - Lists directory contents.
+pvenk_file_copy(from, to)       - Copies a file.
+pvenk_file_move(from, to)       - Moves/Renames a file.
 pvenk_file_delete(path)         - Deletes a file.
+pvenk_file_size(path)           - Returns file size in bytes.
+pvenk_path_join(p1, p2)         - Joins two paths safely.
+pvenk_path_exists(path)         - Checks if a path exists.
 pvenk_regex_match(text, pat)    - Checks if text matches a regex pattern.
+pvenk_regex_find(text, pat)     - Returns first match.
+pvenk_regex_find_all(text, pat) - Returns all matches.
+pvenk_regex_replace(txt, pat, r)- Replaces matches.
+pvenk_regex_split(text, pat)    - Splits string by regex.
 pvenk_time_now_str()            - Returns the current date and time as a string.
+pvenk_time_format(ts, fmt)      - Formats a timestamp.
 
-// --- jvenk (JSON, HTTP) ---
-jvenk_json_stringify(val)       - Converts a Venk object to a JSON string.
-jvenk_json_parse(str)           - Converts a JSON string to a Venk object.
+// --- jvenk (JSON, HTTP, URL) ---
+jvenk_json_stringify(val)       - Converts a Vekn object to a JSON string.
 jvenk_http_get(url)             - Sends an HTTP GET request.
 jvenk_http_post(url, body)      - Sends an HTTP POST request.
+jvenk_url_encode(text)          - URL encodes a string.
+jvenk_url_decode(text)          - URL decodes a string.
 
-// --- gdvenk (Signals, Timers) ---
-gdvenk_timer_start()            - Starts a stopwatch.
+// --- gdvenk (Signals, Timers, Vectors) ---
+gdvenk_vec2(x, y)               - Creates a vector struct.
+gdvenk_vec2_add/sub/mul(...)    - Math operations on Vec2 structs.
+gdvenk_vec2_length(v)           - Length of Vec2.
+gdvenk_vec2_normalize(v)        - Normalize Vec2.
+gdvenk_vec2_distance(v1, v2)    - Distance between Vec2s.
+gdvenk_timer_start()            - Starts a stopwatch (returns ID).
 gdvenk_timer_elapsed(id)        - Returns how much time has passed.
+gdvenk_timer_done(id, duration) - Checks if timer finished.
 gdvenk_signal_connect(name, fn) - Connects a function to a custom event.
 gdvenk_signal_emit(name)        - Triggers a custom event.
 
-// --- cppvenk (Memory, OS, Threads) ---
+// --- cppvenk (Memory, OS, Threads, Queues) ---
 cppvenk_mem_alloc(size)         - Allocates raw memory.
 cppvenk_mem_free(ptr)           - Frees raw memory.
+cppvenk_mem_write(ptr, offset, byte) - Writes to memory.
+cppvenk_mem_read(ptr, offset)   - Reads from memory.
+cppvenk_mem_dump(ptr)           - Dumps memory as string.
 cppvenk_os_exec(cmd)            - Executes a system terminal command.
+cppvenk_os_getpid()             - Gets process ID.
+cppvenk_os_getenv(key)          - Gets environment variable.
+cppvenk_os_setenv(key, val)     - Sets environment variable.
 cppvenk_thread_spawn(script)    - Runs another Venk script in a separate thread.
+cppvenk_thread_sleep(ms)        - Blocks thread for ms.
+cppvenk_queue_create()          - Creates a thread-safe queue.
+cppvenk_queue_push(q_id, item)  - Pushes item to queue.
+cppvenk_queue_pop(q_id)         - Pops item from queue.
+cppvenk_queue_size(q_id)        - Queue size.
 
-// --- lvenk (Lua Patterns) ---
+// --- lvenk (Lua Patterns, Tables, Math) ---
 lvenk_pattern_match(text, pat)  - Matches text using Lua-style patterns.
+lvenk_pattern_find(text, pat)   - Finds Lua pattern.
+lvenk_pattern_replace(txt, pat, rep) - Replaces Lua pattern.
 lvenk_table_insert(arr, item)   - Inserts an item (Lua style).
+lvenk_table_remove(arr, index)  - Removes item (Lua style).
+lvenk_table_concat(arr, sep)    - Joins table into string.
+lvenk_math_fmod(x, y)           - Lua modulo behavior.
+lvenk_math_log(x, base)         - Log with custom base.
+
+--------------------------------------------------------------------------------
+10. COMMAND LINE & IDE
+--------------------------------------------------------------------------------
+To run a script:
+> venk run script.venk
+
+To open the Graphical IDE:
+> venk ide
+
+To build a standalone EXE (Experimental):
+> venk build script.venk
