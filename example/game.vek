@@ -1,0 +1,10 @@
+fn main() {
+    init_window(800, 600, "My First Venk Game");
+    while not should_close() {
+        begin_drawing();
+        clear(30, 30, 40);
+        text("Welcome to Venk!", 280, 280, 30, 50, 200, 255);
+        end_drawing();
+    }
+    close_window();
+}
